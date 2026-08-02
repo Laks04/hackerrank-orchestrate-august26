@@ -1,0 +1,22 @@
+Voice notes are not sent to an LLM directly. Instead:
+
+1. `router/media.py` transcribes the audio locally via `speech_recognition`
+   (Google's free Web Speech endpoint, no API key) when that optional
+   dependency and network access are available.
+2. The transcript is merged into the same `combined_text` used for text
+   messages (see `router/features.py`), so it goes through the identical
+   urgency / scam / promo / payment / event signal library and, if
+   ANTHROPIC_API_KEY is set, the same reasoning prompt as
+   `message_analysis.txt` - a voice note is just a message whose text
+   happened to come from ASR instead of being typed.
+3. If ASR is unavailable (no package, no ffmpeg, no network, or the audio
+   can't be transcribed), the router falls back to metadata-only routing:
+   media_type/media_id/sender/business/group/history signals are still
+   used, but no urgency/scam claim is ever inferred from unheard audio
+   content. This is a deliberate accuracy/safety tradeoff - it is safer to
+   under-claim than to hallucinate what a voice note "probably" says.
+
+If you want an LLM to reason directly over audio content instead of ASR
+text, the natural extension point is `MediaAnalyzer._analyze_voice()` in
+`router/media.py` - add a Claude audio-capable call there, gated the same
+way `_analyze_image_claude()` is gated on `ANTHROPIC_API_KEY`.

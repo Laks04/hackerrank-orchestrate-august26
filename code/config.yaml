@@ -1,0 +1,41 @@
+# Message Notification Router - configuration reference
+#
+# This file documents the tunable knobs the router actually uses. It is NOT
+# parsed by the code at runtime: the router deliberately has zero required
+# third-party dependencies (see README.md "Zero-dependency mode"), and adding
+# a YAML parser as a hard dependency just to read a config file would break
+# that guarantee. Every value below corresponds to a real constant in the
+# source - if you want to change routing behavior, edit the referenced file.
+
+models:
+  # Used only if ANTHROPIC_API_KEY is set; overridable via the matching
+  # environment variable of the same name.
+  text_reasoning: claude-sonnet-5      # env: ROUTER_TEXT_MODEL   (router/llm.py)
+  vision: claude-sonnet-5              # env: ROUTER_VISION_MODEL (router/media.py)
+
+thresholds:
+  # router/rules.py - net = value - risk, decides the final action once
+  # message_type is known and no hard safety override has already fired.
+  notify_if_net_at_least: 0.35
+  mute_if_net_at_most: -0.10
+  mute_if_risk_at_least: 0.55
+  mute_if_risk_over_and_value_under: { risk: 0.25, value: 0.20 }
+
+  # router/features.py - business-trust heuristics
+  business_report_rate_spam_threshold: 0.20   # scaled reports/messages_sent_30d metric
+  young_domain_days: 90
+
+  # router/evidence.py - minimum relevance score to cite a historical message_id
+  evidence_relevance_floor: see evidence.py (documented inline; intentionally
+    a soft threshold tuned alongside the token-overlap scorer, not a single
+    isolated constant)
+
+paths:
+  media_cache: dataset/.media_cache.json   # override with --cache-path is not
+                                            # currently exposed on the CLI;
+                                            # edit router/pipeline.py:run() if needed
+
+secrets:
+  # Read from the environment only - see .env.example. Never place a real
+  # key in this file or commit one anywhere in the repo.
+  anthropic_api_key: ${ANTHROPIC_API_KEY}

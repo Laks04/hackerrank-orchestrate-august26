@@ -1,0 +1,62 @@
+## [2026-08-02T00:00:00+05:30] SESSION START
+
+Agent: claude-chat
+Repo Root: /home/claude/repo
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-08-02T00:20:00+05:30] Improve routing accuracy and produce final submission artifacts
+
+User Prompt (verbatim, secrets redacted):
+Continue
+
+Agent Response Summary:
+Ran the full existing pipeline and evaluation harness against dataset/sample_messages.csv (baseline: 76.7% action accuracy, 60.0% message_type accuracy). Diagnosed and fixed 7 generalizable issues in router/features.py and router/rules.py: split scam detection into hard fraud-language vs generic CTA phrasing to stop misflagging verified businesses; added a new business-trust-based "spam" safety override (previously an unused output value); fixed an unescaped regex bug ("emi" matching inside "Reminder"); reordered message_type classification (promo vs forward, scam-advisory vs payment, casual @mention vs event); tiered the business-relationship value bonus by actionable/time-bound language; removed a flat risk penalty that silently muted harmless promotions; added marketplace-group and school/society-admin-circular context rules. Re-ran the evaluation: 93.3% action accuracy, 96.7% message_type accuracy, 93.3% both-correct, all 8 existing unit tests still pass. Regenerated dataset/output.csv for all 110 messages in messages.csv (schema-validated: correct columns, allowed action/message_type/confidence values, no missing reasons). Cleaned pycache/build artifacts and zipped code/ into code.zip. Delivered code.zip, output.csv, and this log.txt to the user as downloadable files, since the agent has no push credentials to the user's GitHub account and cannot commit directly to the repo.
+
+Actions:
+* router/features.py: split SCAM_KEYWORDS_RE into HARD_SCAM_RE + SOFT_CTA_RE, added ADMIN_EVENT_RE, ACTIONABLE_RE, URGENCY_NEGATION_RE, classifieds pattern in PROMO_RE, fixed emi word-boundary bug in PAYMENT_RE, reordered build_features() to compute business trust signals before combining scam signals
+* router/rules.py: added spam safety override, reordered _classify_type() checks, tiered value bonuses by actionable_signal, removed flat promotion risk baseline, restricted admin+event boost to formal notices
+* code/README.md: added Changelog section documenting before/after evaluation numbers and each fix
+* ran: python evaluation/main.py --dataset-dir ../dataset (before and after each round of fixes)
+* ran: python -m unittest discover -s tests -v (all 8 tests pass)
+* ran: python main.py --dataset-dir ../dataset --output-path ../dataset/output.csv (regenerated full predictions)
+* packaged code.zip (code/ directory, pycache stripped) and copied output.csv, log.txt to deliverables
+
+Context:
+tool=claude-chat
+branch=main
+repo_root=/home/claude/repo
+worktree=main
+parent_agent=none
+
+## [2026-08-02T00:40:00+05:30] Align with full autonomous-agent spec: prompts/, validator, chat_transcript.md, config.yaml, README expansion
+
+User Prompt (verbatim, secrets redacted):
+[pasted a longer autonomous-agent-style spec restating the Message Notification Router challenge with an expanded suggested project structure (src/ layout, prompts/, config.yaml, chat_transcript.md, output_validator) and asked to "create the winning project... read this once again and work on improving the existing one"]
+
+Agent Response Summary:
+Kept the existing modular router/ package (functionally equivalent to the suggested src/ layout; documented that choice in the README rather than doing a risky ground-up rename) and closed the remaining gaps from the expanded spec: extracted the Claude text-reasoning and image-analysis prompts into prompts/message_analysis.txt and prompts/image_analysis.txt (loaded at runtime with a safe inline fallback), documented the voice-note approach in prompts/voice_analysis.txt since no separate LLM voice prompt exists (local ASR feeds the same text-signal pipeline instead); updated default Claude model identifiers in llm.py/media.py; added router/schema.py:validate_output_csv() implementing the full pre-submission checklist (column order, one-row-per-id, no extras, allowed values, confidence range, non-empty single-line reasons, well-formed evidence field) and wired it into pipeline.run() so a full run fails loudly on a bad CSV instead of shipping one silently; added two new unit tests for the validator (10/10 tests passing); added a documentation-only config.yaml (kept undependent on a YAML parser to preserve zero-dependency mode) and chat_transcript.md documenting the real development process; expanded README.md with an ASCII request-flow diagram, an explicit output-schema table, an environment-variables table, an Assumptions section, and a Future-improvements section. Re-ran the full test suite and evaluation harness after each change to confirm no regression (still 93.3% action / 96.7% type / 93.3% both-correct), regenerated dataset/output.csv for all 110 messages (now passing the new automated validator), repackaged code.zip (25 files, .env.example correctly included, no pycache), and re-delivered code.zip/output.csv/log.txt to the user.
+
+Actions:
+* router/llm.py, router/media.py: extract prompts to prompts/*.txt with safe fallback loader; update default model ids to claude-sonnet-5
+* prompts/message_analysis.txt, prompts/image_analysis.txt, prompts/voice_analysis.txt: new files
+* router/schema.py: add validate_output_csv()
+* router/pipeline.py: call validate_output_csv() after writing output.csv (skipped on --limit runs)
+* main.py: catch ValueError from validation with a clear error message
+* tests/test_router.py: add test_validate_output_csv_accepts_well_formed_file, test_validate_output_csv_rejects_missing_message_id
+* config.yaml, chat_transcript.md: new documentation files
+* README.md: add request-flow diagram, output schema table, env var table, assumptions, future improvements sections
+* ran: python -m unittest discover -s tests -v (10/10 pass)
+* ran: python evaluation/main.py --dataset-dir ../dataset (93.3%/96.7%/93.3%, unchanged)
+* ran: python main.py --dataset-dir ../dataset --output-path ../dataset/output.csv --verbose (110/110 rows, validator passed)
+* repackaged code.zip, copied output.csv/log.txt to deliverables
+
+Context:
+tool=claude-chat
+branch=main
+repo_root=/home/claude/repo
+worktree=main
+parent_agent=none
