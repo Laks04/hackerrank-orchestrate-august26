@@ -1,0 +1,24 @@
+# Core: the router runs with ZERO third-party dependencies (stdlib only) in
+# pure deterministic mode. Everything below is optional and used only if
+# installed / configured; every import is wrapped in try/except so a missing
+# package just degrades that one capability instead of crashing the run.
+
+# Optional: enables the Claude vision + text reasoning layers
+# (only used if ANTHROPIC_API_KEY is set in the environment).
+anthropic>=0.34.0
+
+# Optional: local OCR fallback for images when no API key is configured.
+# Also requires the system `tesseract` binary (e.g. `apt install tesseract-ocr`
+# or `brew install tesseract`) to be on PATH.
+pillow>=10.0.0
+pytesseract>=0.3.10
+
+# Optional: local ASR fallback for voice notes (uses the free Google Web
+# Speech endpoint - outbound network only, no key). Also requires `ffmpeg`
+# on PATH for pydub to decode mp3.
+SpeechRecognition>=3.10.0
+pydub>=0.25.1
+
+# Optional: load ANTHROPIC_API_KEY from a local .env file instead of the
+# real environment.
+python-dotenv>=1.0.0

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+dataset/.media_cache.json
+*.zip
+.DS_Store
